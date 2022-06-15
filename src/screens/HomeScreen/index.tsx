@@ -89,6 +89,7 @@ const HomeScreen: React.FC = () => {
   React.useEffect(() => {
     ListItensCommand();
   }, []);
+
   return (
     <View
       style={{
@@ -174,20 +175,21 @@ const HomeScreen: React.FC = () => {
         />
       )}
       <ModalFlexEnd
-        minHeight="15%"
+        minHeight="20%"
         isModal={isModalFlexEnd}
         alignItens="center"
-        justifyContent="center"
         animationType="slide">
         <View
           style={{
             flexDirection: 'row',
-            marginBottom: 20,
+            marginBottom: 30,
+            marginTop: 20,
             alignItems: 'center',
           }}>
           <TouchableOpacity
             onPress={() => {
               if (quantity === 0) {
+                setQuantity(0);
               } else {
                 setQuantity(quantity - 1);
               }
