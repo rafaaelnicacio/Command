@@ -1,13 +1,18 @@
 import React from 'react';
-import {FlatList, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import CardItems from '../../components/Cards/CardItems';
 import Header from '../../components/Header';
 import SearchIcon from '../../components/icons/SearchIcon';
 import ModalFlexEnd from '../../components/Modal/ModalFlexEnd';
-import {items} from '../../mock/ItemsList';
-import {getListCommand} from '../../services/listCommand';
+import {getListCommand} from '../../services/command';
 import {DIMENSIONS} from '../../utils/dimensions';
-import metrics from '../../utils/metrics';
 interface ISelectedDishes {
   name?: string;
   type?: string;
@@ -20,6 +25,7 @@ interface IListCommad {
   name: string;
   wholePrice: number;
   halfPrice: number;
+  description: string;
 }
 const HomeScreen: React.FC = () => {
   const [selectedDishes, setSelectedDishes] = React.useState<ISelectedDishes[]>(
@@ -28,6 +34,7 @@ const HomeScreen: React.FC = () => {
   const [listCommand, setListCommad] = React.useState<IListCommad[]>([]);
   const [detailsDishes, setDetailsDishes] = React.useState<ISelectedDishes>();
   const [quantity, setQuantity] = React.useState(1);
+  const [refreshing, setRefreshing] = React.useState(false);
   const [isModalFlexEnd, setIsModalFlexEnd] = React.useState(false);
   const selectDishes = (item: ISelectedDishes) => {
     const data = {
@@ -63,30 +70,21 @@ const HomeScreen: React.FC = () => {
       setSelectedDishes(prevState => [...prevState, data]);
     }
   };
-  const handleColor = (
-    item: ISelectedDishes,
-    type: 'BORDER' | 'BACKGROUND',
-  ) => {
-    const find = selectedDishes.find(
-      (el: ISelectedDishes) => el.id === item.id,
-    );
-    const map = selectedDishes.map((el: ISelectedDishes) => {
-      if (el.id === item.id) {
-        return el.type;
-      }
-    });
-    switch (true) {
-      case find && type === 'BACKGROUND':
-        return {color: '#FEBA27', type: map};
-      case find && type === 'BORDER':
-        return {color: '#FEBA27', type: map};
-    }
+  const onRefresh = () => {
+    setRefreshing(() => true);
+    ListItensCommand();
+    setRefreshing(() => false);
   };
   async function ListItensCommand() {
+    setRefreshing(() => true);
+
     try {
       const res = await getListCommand();
       setListCommad(res.Items);
-    } catch (error) {}
+      setRefreshing(() => false);
+    } catch (error) {
+      setRefreshing(() => false);
+    }
   }
   React.useEffect(() => {
     ListItensCommand();
@@ -123,40 +121,58 @@ const HomeScreen: React.FC = () => {
           placeholderTextColor="#FFF"
         />
       </View>
-      <FlatList
-        data={listCommand}
-        contentContainerStyle={{alignItems: 'center'}}
-        keyExtractor={(item, index) => index.toString()}
-        showsVerticalScrollIndicator={false}
-        renderItem={({item, index}) => (
-          <View
-            style={{
-              width: DIMENSIONS.width_screen - 50,
-              alignItems: 'center',
-              marginBottom: 10,
-            }}>
-            {/* <CardItems
-              backgroundColor={handleColor(item, 'BACKGROUND')}
-              borderColor={handleColor(item, 'BACKGROUND')}
-              onPress={el => {
-                const find = selectedDishes.find(
-                  item => item.id === el.id && item.type === el.type,
-                );
-                if (find) {
-                  setDetailsDishes(find);
-                  setQuantity(find.quantity);
-                } else {
-                  setDetailsDishes(el);
-                  setQuantity(1);
-                }
-                setIsModalFlexEnd(true);
-              }}
-              item={item}
-              key={index}
-            /> */}
-          </View>
-        )}
-      />
+      {refreshing ? (
+        <ActivityIndicator size="large" color="#FEBA27" />
+      ) : (
+        <FlatList
+          data={listCommand}
+          contentContainerStyle={{alignItems: 'center'}}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+          keyExtractor={(item, index) => index.toString()}
+          showsVerticalScrollIndicator={false}
+          renderItem={({item, index}) => (
+            <View
+              style={{
+                width: DIMENSIONS.width_screen - 50,
+                alignItems: 'center',
+                marginBottom: 10,
+              }}>
+              <CardItems
+                backgroundColor={selectedDishes.map(el => {
+                  if (el.id === item._id) {
+                    return el.type;
+                  }
+                  return undefined;
+                })}
+                borderColor={selectedDishes.map(el => {
+                  if (el.id === item._id) {
+                    return el.type;
+                  }
+                })}
+                onPress={el => {
+                  const find = selectedDishes.find(
+                    item => item.id === el.id && item.type === el.type,
+                  );
+                  if (find) {
+                    setDetailsDishes(find);
+                    setQuantity(find.quantity);
+                  } else {
+                    setDetailsDishes({
+                      ...el,
+                      quantity,
+                    });
+                    setQuantity(1);
+                  }
+                  setIsModalFlexEnd(true);
+                }}
+                item={item}
+                key={index}
+              />
+            </View>
+          )}
+        />
+      )}
       <ModalFlexEnd
         minHeight="15%"
         isModal={isModalFlexEnd}

@@ -143,7 +143,7 @@ const ListOrders: React.FC = () => {
               key={index}
             />
           ))}
-          <View style={{paddingBottom: 10}}/>
+          <View style={{paddingBottom: 10}} />
         </>
       </ModalFooter>
       <ModalCenter isModal={isModalCenter} animationType="fade">
@@ -206,7 +206,8 @@ const ListOrders: React.FC = () => {
             </View>
             <View>
               <Text style={{fontSize: 18, fontWeight: '600', color: '#FEBA27'}}>
-                ${listOrdersDetails &&
+                $
+                {listOrdersDetails &&
                   formatNumber(
                     listOrdersDetails.orders
                       .map(el => el.quantity * el.price)
@@ -232,7 +233,7 @@ const ListOrders: React.FC = () => {
               borderRadius: 10,
             }}>
             <Text style={{fontSize: 18, fontWeight: '700', color: 'black'}}>
-              Adicionar
+              Concluir
             </Text>
           </TouchableOpacity>
         </View>
